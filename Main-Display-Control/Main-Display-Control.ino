@@ -580,7 +580,7 @@ system_state_t state = TOP_MENU;  // track the current state of the toolbox
 
 //Temp/Humid declarations
 // Create an instance of the DHT11 class and set the digital I/O pin.
-DHT11 dht11(13);
+DHT11 dht11(1);
 // Declare variables to hold Temprature and Humidity
 float humidity, temp_c, temp_f;
 

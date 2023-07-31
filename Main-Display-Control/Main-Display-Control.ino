@@ -236,7 +236,7 @@
 #define SLEEP_AFTER 5 * 60 * 1000  // how many milliseconds of inactivity before going to sleep/hibernation
 
 // static strings used throughout DroidToolbox
-const char ble_adv_name[]               = "DROIDTLBX";              // this is the name the toolbox's beacon will appear as, keep to 10 characters or less
+const char ble_adv_name[]               = "SITH-TLBX";              // this is the name the toolbox's beacon will appear as, keep to 10 characters or less
 const char msg_version[]                = MSG_VERSION;
 const char msg_title[]                  = "Droid Toolbox";
 const char msg_email[]                  = "ruthsarian@gmail.com";

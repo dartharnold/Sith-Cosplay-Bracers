@@ -150,12 +150,6 @@
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
 
-// added for Bracer LEDs
-#include <Adafruit_NeoPixel.h>
-
-// added for Temp/Humid Sensor
-#include <DHT11.h>
-
 #define NUM_BEACON_PARAMS                   3
 #define C565(r,g,b)                         ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)    // macro to convert RGB values to TFT_eSPI color value
 
@@ -572,22 +566,6 @@ int8_t droid_volume = 100;      // there is no way to 'read' the current volume 
 uint8_t selected_item = 0;      // keep track of the currently selected option when displaying menus, options, etc.
 system_state_t state = TOP_MENU;  // track the current state of the toolbox
 
-// NeoPixel declarations
-// Which pin on the Arduino is connected to the NeoPixels?
-#define NEOPIN       3 
-#define PIXELCOUNT   2  // How many NeoPixels are attached to the Arduino?
-#define PIXELFORMAT  NEO_GRB + NEO_KHZ800  // NeoPixel color format & data rate. See the strandtest example for information on possible values.
-
-//Temp/Humid declarations
-// Create an instance of the DHT11 class and set the digital I/O pin.
-DHT11 dht11(1);
-// Declare variables to hold Temprature and Humidity
-float humidity, temp_c, temp_f;
-
-// Rather than declaring the whole NeoPixel object here, we just create
-// a pointer for one, which we'll then allocate later...
-Adafruit_NeoPixel *pixels;
-
 personality_t* get_droid_personality(uint8_t id) {
   uint8_t i;
   for (i=0; i<DROID_PERSONALITIES_SIZE; i++) {
@@ -616,18 +594,6 @@ location_t* get_location(uint8_t id) {
     }
   }
   return nullptr;
-}
-
-void get_hum_temp()
-{
-    // Read the humidity from the sensor.
-    humidity = dht11.readHumidity();
-
-    // Read the temperature from the sensor.
-    temp_c = dht11.readTemperature();
-
-    // Calculate temperature from C
-    temp_f = ((temp_c*9)/5)+32;
 }
 
 void init_advertisement_data() {
@@ -2991,25 +2957,6 @@ void button_handler() {
   // }
 }
 
-void updatePixels() {
-  uint32_t DelayOff = random(200,500);
-  uint32_t DelayOn = random(200,800);
-  uint8_t pixel;
-
-  pixels->clear(); // Set all pixel colors to 'off'
-  pixels->show();
-
-  delay(DelayOff);  // Pause Pixel Off for this pass through loop
-  
-  // Setup to turn Pixels On
-  for (pixel = 0; pixel <= PIXELCOUNT; pixel ++) {
-    pixels->setPixelColor(pixel, pixels->Color(255, 0, 0));
-  }
-  pixels->setBrightness(75);
-  pixels->show();   // Send the updated pixel colors to the hardware.
-  delay(DelayOn); // Pause Pixel On before next pass through loop
-}
-
 void setup() {
   uint8_t i;
 
@@ -3090,11 +3037,6 @@ void setup() {
   // init serial monitor
   Serial.begin(115200);
   Serial.println("Ready!");
-
-  // Create a new NeoPixel object dynamically with these values:
-  pixels = new Adafruit_NeoPixel(PIXELCOUNT, NEOPIN, PIXELFORMAT);
-
-  pixels->begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
 }
 
 void loop() {
@@ -3153,7 +3095,6 @@ void loop() {
       tft_update = true;
       break;
   }
-  //updatePixels();
   update_display();
 
   // inactivity sleep check; screen will blank when ESP32 goes to sleep

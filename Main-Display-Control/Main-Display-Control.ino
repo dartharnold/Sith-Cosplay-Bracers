@@ -413,7 +413,9 @@ const char* msg_beacon_location_param[NUM_BEACON_PARAMS] = {
 #define BUTTON_DOWN_PIN     17
 #define BUTTON_SELECT_PIN   21
 #define BUTTON_BACK_PIN     16
-//#define BUTTON_HOME_PIN     21    // May remove this button and use a LONGPRESS on the Back Button Instead. 
+#define TILT_PIN            1   // May remove this button and use a LONGPRESS on the Back Button Instead. 
+
+#define LCD_BACKLIGHT       38  // Control Pin of LCD
 
 #define LAZY_DEBOUNCE       10  // time to wait after a button press before considering it a good press
 #define SHORT_PRESS_TIME    500 // maximum time, in milliseconds, that a button can be held before release and be considered a SHORT press
@@ -433,6 +435,7 @@ const BLEUUID cmdUUID("09b600b1-3e42-41fc-b474-e9c0c8f0c801");
 const BLEUUID notifyUUID("09b600b0-3e42-41fc-b474-e9c0c8f0c801");  // not used, but keeping it for future reference
 
 uint32_t last_activity;
+uint8_t tilt_hold = 99;
 
 BLEScan* pBLEScan = nullptr;
 BLEClient* pClient = nullptr;
@@ -2978,7 +2981,7 @@ void setup() {
   pinMode(BUTTON_DOWN_PIN, INPUT_PULLUP);
   pinMode(BUTTON_SELECT_PIN, INPUT_PULLUP);
   pinMode(BUTTON_BACK_PIN, INPUT_PULLUP);
-  //pinMode(BUTTON_HOME_PIN, INPUT_PULLUP);
+  pinMode(TILT_PIN, INPUT_PULLUP);
 
   // init bluetooth
   BLEDevice::init("");
@@ -3040,6 +3043,21 @@ void setup() {
 }
 
 void loop() {
+
+  uint8_t tilt_now = digitalRead(TILT_PIN);
+
+  if (tilt_hold != tilt_now) {
+    tilt_hold = tilt_now;
+    if (!tilt_now) {
+      // Turning off the LCD backlight
+      delay(1000);
+      digitalWrite(LCD_BACKLIGHT, LOW);
+    } else {
+      // Turning on the LCD backlight
+      delay(1000);
+      digitalWrite(LCD_BACKLIGHT, HIGH);
+    };
+  };
 
   button_handler();
 

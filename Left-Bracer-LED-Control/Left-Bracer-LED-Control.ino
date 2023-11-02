@@ -3,8 +3,8 @@
 
 // NeoPixel declarations
 // Which pin on the Arduino is connected to the NeoPixels?
-#define NEOPIN 10
-#define PIXELCOUNT 7  // How many NeoPixels are attached to the Arduino?
+#define NEOPIN 7
+#define PIXELCOUNT 2  // How many NeoPixels are attached to the Arduino?
 #define NEOBRIGHT 75
 #define PIXELFORMAT NEO_GRB + NEO_KHZ800  // NeoPixel color format & data rate. See the strandtest example for information on possible values.
 
@@ -18,7 +18,7 @@ Adafruit_NeoPixel* pixels;
 const char* DEVNAME = "NavaComp1";
 
 // Counters and Timers
-#define CHANGEDELY 30000
+#define CHANGEDELY 15*1000
 
 // Location IDs (in Hex)
 // #define MARKETPLACE 0x01

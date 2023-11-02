@@ -164,6 +164,7 @@
  */
 
  /* ** darth_update - description of changes
+ *   - Include Droid Toolbox Extended Code
  *   - Changed version number format
  *   - Added code to set OFR font as default font
  *   - Changed SPLASH to ABOUT in order to have clock on Startup
@@ -199,8 +200,8 @@
 // CUSTOMIZATIONS BEGIN -- These values can be changed to alter Droid Toolbox's behavior.
 
 // ** darth_update - UPDATE start
-// Changed Version number to show Modded Version and Base Version
-// mod version is added to the end of the base version 
+  // Changed Version number to show Modded Version and Base Version
+  // mod version is added to the end of the base version 
   #define MSG_VERSION                         "v0.68a.01"                 // the version displayed on the splash screen at the lower right; β
 // ** darth_update - end
 
@@ -211,13 +212,13 @@
 #define DEFAULT_SELECTED_BORDER_COLOR       TFT_YELLOW
 
 // ** darth_update - UPDATE - start
-// change SPLASH to ABOUT
+  // change SPLASH to ABOUT
 
-#define ABOUT_TEXT_SIZE                    DEFAULT_TEXT_SIZE       // title is ABOUT_TEXT_SIZE+1 size, all other text is ABOUT_TEXT_SIZE
-#define ABOUT_TITLE_COLOR                  TFT_RED
-#define ABOUT_SUBTITLE_COLOR               TFT_ORANGE
-#define ABOUT_TEXT_COLOR                   TFT_LIGHTGREY
-#define ABOUT_VERSION_COLOR                C565(64,64,64)          // TFT_VERYDARKGREY
+  #define ABOUT_TEXT_SIZE                    DEFAULT_TEXT_SIZE       // title is ABOUT_TEXT_SIZE+1 size, all other text is ABOUT_TEXT_SIZE
+  #define ABOUT_TITLE_COLOR                  TFT_RED
+  #define ABOUT_SUBTITLE_COLOR               TFT_ORANGE
+  #define ABOUT_TEXT_COLOR                   TFT_LIGHTGREY
+  #define ABOUT_VERSION_COLOR                C565(64,64,64)          // TFT_VERYDARKGREY
 
 // ** darth_update - end
 
@@ -294,15 +295,15 @@
 
 // static strings used throughout DroidToolbox
 // ** darth_update - ADD - start
-// Add Menu option text for About Screeen
+  // Add Menu option text for About Screeen
 
-const char msg_about[]                  = "ABOUT";
+  const char msg_about[]                  = "ABOUT";
 // ** darth_update - end
 
 // ** darth_update - UPDATE - start
-// change device name from default
+  // change device name from default
 
-const char ble_adv_name[]               = "SITH-TLBX";              // this is the name the toolbox's beacon will appear as, keep to 10 characters or less
+  const char ble_adv_name[]               = "SITH-TLBX";              // this is the name the toolbox's beacon will appear as, keep to 10 characters or less
 // ** darth_update - end
 
 const char ble_adv_name_droid[]         = "DROID";
@@ -681,40 +682,47 @@ typedef enum {
 } button_press_t;
 
 // ** darth_update - UPDATE - start
-// change Splash Screen to About Screen
+  // change Splash Screen to About Screen
+  // define CLOCK Values
 
-typedef enum {
-  ABOUT,                  // about screen
-  TOP_MENU,               // top menu; beacon or scanner
-  BEACON_TYPE_MENU,       // display the types of beacons to pick from
-  BEACON_DROID_LIST,      // display a list of droid beacons to pick from
-  BEACON_LOCATION_LIST,   // display a list of location beacons to pick from
-  BEACON_RANDOM,          // generate a random beacon
-  BEACON_ROTATING,        // the beacon rotates (changes) at some regular interval
-  BEACON_SET_INTERVAL,    // set the interval between beacon rotations
-  BEACON_ACTIVATE,        // display the option to activate the beacon
-  BEACON_ACTIVE,          // display the currently active beacon
-  BEACON_EXPERT,          // display an 'expert mode' beacon control screen
-  BEACON_EXPERT_ACTIVE,   // for when the expert mode beacon is active
+  typedef enum {
+    ABOUT,                  // about screen
+    TOP_MENU,               // top menu; beacon or scanner
+    BEACON_TYPE_MENU,       // display the types of beacons to pick from
+    BEACON_DROID_LIST,      // display a list of droid beacons to pick from
+    BEACON_LOCATION_LIST,   // display a list of location beacons to pick from
+    BEACON_RANDOM,          // generate a random beacon
+    BEACON_ROTATING,        // the beacon rotates (changes) at some regular interval
+    BEACON_SET_INTERVAL,    // set the interval between beacon rotations
+    BEACON_ACTIVATE,        // display the option to activate the beacon
+    BEACON_ACTIVE,          // display the currently active beacon
+    BEACON_EXPERT,          // display an 'expert mode' beacon control screen
+    BEACON_EXPERT_ACTIVE,   // for when the expert mode beacon is active
 
-  SCANNER_SCANNING,
-  SCANNER_RESULTS,
-  SCANNER_CONNECTING,
-  SCANNER_CONNECTED,
-  SCANNER_CONNECT_FAILED, 
+    SCANNER_SCANNING,
+    SCANNER_RESULTS,
+    SCANNER_CONNECTING,
+    SCANNER_CONNECTED,
+    SCANNER_CONNECT_FAILED, 
 
-  CONNECTED_MENU,         // options available after connecting to a droid; volume or sounds
+    CONNECTED_MENU,         // options available after connecting to a droid; volume or sounds
 
-  SOUND_GROUP,
-  SOUND_TRACK,
-  SOUND_PLAY,
-  SOUND_PLAYING,
+    SOUND_GROUP,
+    SOUND_TRACK,
+    SOUND_PLAY,
+    SOUND_PLAYING,
 
-  VOLUME_UP,
-  VOLUME_DOWN,
-  VOLUME_TEST,
-  VOLUME_TESTING,
-} system_state_t;
+    VOLUME_UP,
+    VOLUME_DOWN,
+    VOLUME_TEST,
+    VOLUME_TESTING,
+
+    CLOCK_ENVIRO,
+    SET_TIME,
+
+    MOBILE_WIFI,
+    HOME_WIFI,
+  } system_state_t;
 
 // ** darth_update - end
 
@@ -728,23 +736,28 @@ typedef struct {
   const char* text;
 } menu_item_t;
 
-const menu_item_t top_menu[] = {
-  { SCANNER_SCANNING,     msg_scanner   },
-  { BEACON_TYPE_MENU,     msg_beacon    },
-  { ABOUT,                msg_about     },
-};
+// ** darth_update - MOVE - start
+  // Move Section to droid toolbox extended to change top menu to include Clock, Set Time, and About 
+
+  // const menu_item_t top_menu[] = {
+  //   { SCANNER_SCANNING,     msg_scanner      },
+  //   { BEACON_TYPE_MENU,     msg_beacon       },
+  //   { ABOUT,                msg_about        },
+  // };
+
+// ** darth_update - end
 
 const menu_item_t beacon_type_menu[] = {
-  { BEACON_LOCATION_LIST, msg_location  },
-  { BEACON_DROID_LIST,    msg_droid     },
-  { BEACON_RANDOM,        msg_random    },
-  { BEACON_ROTATING,      msg_rotating  },
-  { BEACON_EXPERT,        msg_expert    },
+  { BEACON_LOCATION_LIST,    msg_location  },
+  { BEACON_DROID_LIST,       msg_droid     },
+  { BEACON_RANDOM,           msg_random    },
+  { BEACON_ROTATING,         msg_rotating  },
+  { BEACON_EXPERT,           msg_expert    },
 };
 
 const menu_item_t connected_menu[] = {
-  { SOUND_GROUP,          msg_sounds    },
-  { VOLUME_UP,            msg_volume    },
+  { SOUND_GROUP,             msg_sounds    },
+  { VOLUME_UP,               msg_volume    },
 };
 
 //
@@ -793,13 +806,19 @@ typedef struct {
   list_render_options_t render_options;
 } list_t;
 
-// these #define statements are index values of the global lists[] array. they will be used to indentify an individual list within the lists[] array.
-#define LIST_TOP_MENU           0
-#define LIST_BEACON_TYPE_MENU   1
-#define LIST_CONNECTED_MENU     2
-#define LIST_LOCATIONS          3
-#define LIST_PERSONALITIES      4
-#define NUM_LISTS               5
+// ** darth_update - UPDATE - start
+  // add items to the global lists[] array for set menu
+
+  // these #define statements are index values of the global lists[] array. they will be used to indentify an individual list within the lists[] array.
+  #define LIST_TOP_MENU           0
+  #define LIST_BEACON_TYPE_MENU   1
+  #define LIST_CONNECTED_MENU     2
+  #define LIST_LOCATIONS          3
+  #define LIST_PERSONALITIES      4
+  #define LIST_SET_TIME           5 // added for setting clock with wifi
+  #define NUM_LISTS               6 //6
+
+// ** darth_updaet - end
 
 // lists will be loaded via the load_lists() function. 
 list_t lists[NUM_LISTS];
@@ -813,13 +832,21 @@ TFT_eSPI tft = TFT_eSPI();      // display interface
 bool tft_update = true;         // flag to indicate display needs to be updated
 
 // ** darth_update - UPDATE - start
-// change startup to TOP_MENU for now but later make this the clock screen
+  // change startup to TOP_MENU for now but later make this the clock screen
 
-// replace SPLASH with desired start screen
+  // replace SPLASH with desired start screen
 
-  system_state_t state = TOP_MENU;  // track the current state of the toolbox
+    system_state_t state = TOP_MENU;  // track the current state of the toolbox
 
 // ** darth_update - end
+
+// ** darth_update - ADD - start
+// add include for Droid Toolbox Extended
+
+   #include "Droid-Toolbox_EX.h"
+
+// ** darth_update - end
+
 
 //
 // rendering lists is done with an array of strings (the items in the list)
@@ -925,6 +952,13 @@ void list_init() {
   lists[LIST_PERSONALITIES].render_options.ofr_font_size          = 0;
   lists[LIST_PERSONALITIES].render_options.ofr_font_height        = 0;
   lists[LIST_PERSONALITIES].render_options.row_width              = 0;
+
+  // ** darth_update - ADD - start
+  // add extended Menus
+
+   list_init_ex();
+
+  // ** darth_update - end
 }
 
 // calculate the current font height
@@ -1898,68 +1932,68 @@ void display_beacon_control() {
 }
 
 // ** darth_update - UPDATE - start
-// changing to about from splash.  This is the original SPLASH screen just renamed ABOUT
-// a replacement About screen may be create later for reflect MOD.
+  // changing to about from splash.  This is the original SPLASH screen just renamed ABOUT
+  // a replacement About screen may be create later for reflect MOD.
 
-// display the about screen seen when the program starts
-void display_about() {
-  uint16_t y = 0, c;
-  uint8_t tmp_font;
-  char msg[MSG_LEN_MAX];
+  // display the about screen seen when the program starts
+  void display_about() {
+    uint16_t y = 0, c;
+    uint8_t tmp_font;
+    char msg[MSG_LEN_MAX];
 
-  // location the Y position to begin drawing to center vertically the text
-  tft.setTextSize(1);
-  y = (tft.height() - (tft.fontHeight() * ((ABOUT_TEXT_SIZE * 6) + 1))) / 2;
-  tft.setCursor(0, y);
+    // location the Y position to begin drawing to center vertically the text
+    tft.setTextSize(1);
+    y = (tft.height() - (tft.fontHeight() * ((ABOUT_TEXT_SIZE * 6) + 1))) / 2;
+    tft.setCursor(0, y);
 
-  // title
-  dtb_draw_string(msg_title, tft.getViewportWidth()/2, y, tft.getViewportWidth(), ABOUT_TEXT_SIZE + 1, ABOUT_TITLE_COLOR, TC_DATUM);
-  y += tft.fontHeight();
+    // title
+    dtb_draw_string(msg_title, tft.getViewportWidth()/2, y, tft.getViewportWidth(), ABOUT_TEXT_SIZE + 1, ABOUT_TITLE_COLOR, TC_DATUM);
+    y += tft.fontHeight();
 
-  // contact
-  dtb_draw_string(msg_email, tft.getViewportWidth()/2, y, DEFAULT_TEXT_FIT_WIDTH, ABOUT_TEXT_SIZE, ABOUT_SUBTITLE_COLOR, TC_DATUM);
-  y += (tft.fontHeight() * 2);
+    // contact
+    dtb_draw_string(msg_email, tft.getViewportWidth()/2, y, DEFAULT_TEXT_FIT_WIDTH, ABOUT_TEXT_SIZE, ABOUT_SUBTITLE_COLOR, TC_DATUM);
+    y += (tft.fontHeight() * 2);
 
-  // press any button...
-  dtb_draw_string(msg_continue1, tft.getViewportWidth()/2, y, DEFAULT_TEXT_FIT_WIDTH, ABOUT_TEXT_SIZE, ABOUT_TEXT_COLOR, TC_DATUM);
-  y += tft.fontHeight();
+    // press any button...
+    dtb_draw_string(msg_continue1, tft.getViewportWidth()/2, y, DEFAULT_TEXT_FIT_WIDTH, ABOUT_TEXT_SIZE, ABOUT_TEXT_COLOR, TC_DATUM);
+    y += tft.fontHeight();
 
-  // passing a text size of 0, causing dtb_draw_string() to use whatever the current font size is; this way both lines of 'press any button...' will
-  // be the same size.
-  dtb_draw_string(msg_continue2, tft.getViewportWidth()/2, y, DEFAULT_TEXT_FIT_WIDTH, 0, ABOUT_TEXT_COLOR, TC_DATUM);
+    // passing a text size of 0, causing dtb_draw_string() to use whatever the current font size is; this way both lines of 'press any button...' will
+    // be the same size.
+    dtb_draw_string(msg_continue2, tft.getViewportWidth()/2, y, DEFAULT_TEXT_FIT_WIDTH, 0, ABOUT_TEXT_COLOR, TC_DATUM);
 
-  #ifdef USE_OFR_FONTS
-    // backup dtb_font
-    tmp_font = dtb_font;
+    #ifdef USE_OFR_FONTS
+      // backup dtb_font
+      tmp_font = dtb_font;
 
-    // set dtb_font to glcd so version and bat are always displayed in GLCD
-    // if this is useless, just comment out the line below.
-    dtb_font = 0;
-  #endif
+      // set dtb_font to glcd so version and bat are always displayed in GLCD
+      // if this is useless, just comment out the line below.
+      dtb_font = 0;
+    #endif
 
-  // version
-  dtb_draw_string(msg_version, tft.getViewportWidth(), tft.getViewportHeight(), tft.getViewportWidth()/2, ABOUT_TEXT_SIZE, ABOUT_VERSION_COLOR, BR_DATUM);
+    // version
+    dtb_draw_string(msg_version, tft.getViewportWidth(), tft.getViewportHeight(), tft.getViewportWidth()/2, ABOUT_TEXT_SIZE, ABOUT_VERSION_COLOR, BR_DATUM);
 
-  // battery voltage
-  y = (analogRead(BAT_ADC_PIN) * 2 * 3.3 * 1000) / 4096;
-  c = ABOUT_VERSION_COLOR;
-  if (y < 3400) {
-    c = C565(128,0,0);        // need to charge the battery
-  } else if (y < 3800) {
-    c = C565(96,96,0);        // battery is getting low
-  } else if (y < 4400) {
-    c = C565(0,128,0);        // battery is charged
-  } else {
-    c = ABOUT_VERSION_COLOR; // you're probably on USB
+    // battery voltage
+    y = (analogRead(BAT_ADC_PIN) * 2 * 3.3 * 1000) / 4096;
+    c = ABOUT_VERSION_COLOR;
+    if (y < 3400) {
+      c = C565(128,0,0);        // need to charge the battery
+    } else if (y < 3800) {
+      c = C565(96,96,0);        // battery is getting low
+    } else if (y < 4400) {
+      c = C565(0,128,0);        // battery is charged
+    } else {
+      c = ABOUT_VERSION_COLOR; // you're probably on USB
+    }
+    snprintf(msg, MSG_LEN_MAX, "%s:%.2fV", (y<4400 ? "BAT" : "PWR"), (y / (float)1000));
+    dtb_draw_string(msg, 0, tft.getViewportHeight(), tft.getViewportWidth()/2, ABOUT_TEXT_SIZE, c, BL_DATUM);
+
+    #ifdef USE_OFR_FONTS
+      // restore dtb_font
+      dtb_font = tmp_font;
+    #endif
   }
-  snprintf(msg, MSG_LEN_MAX, "%s:%.2fV", (y<4400 ? "BAT" : "PWR"), (y / (float)1000));
-  dtb_draw_string(msg, 0, tft.getViewportHeight(), tft.getViewportWidth()/2, ABOUT_TEXT_SIZE, c, BL_DATUM);
-
-  #ifdef USE_OFR_FONTS
-    // restore dtb_font
-    dtb_font = tmp_font;
-  #endif
-}
 
 // ** darth_update - end
 
@@ -2489,15 +2523,20 @@ void update_display() {
       display_captioned_menu(msg_select, LIST_TOP_MENU);
       break;
 
-// ** darth_update - UPDATE - start
-// changing SPLASH Screen to About Screen
-
-    case ABOUT:                 // display_about()
-      display_about();
-      break;
-
-// ** darth_update - end      
+  // ** darth_update - UPDATE - start
+  // changing SPLASH Screen to About Screen
+  
+      case ABOUT:                 // display_about()
+        display_about();
+        break;
+  // ** darth_update - end      
   }
+
+  // ** darth_update - add - start
+  // add the update_display_ex call
+
+  update_display_ex();
+  // ** darth_update - end
 
   tft_update = false;
 }
@@ -2510,13 +2549,13 @@ void button1(button_press_t press_type) {
   SERIAL_PRINTLN("Button 1 Press");
 
   switch (state) {
-// ** darth_update - UPDATE - start
-// change SPLASH to ABOUT
+  // ** darth_update - UPDATE - start
+  // change SPLASH to ABOUT
 
-    // on splash screen
-    case ABOUT:
+      // on splash screen
+      case ABOUT:
 
-// ** darth_update - end
+  // ** darth_update - end
 
       // only swap fonts if USE_OFR_FONTS is defined
       #ifdef USE_OFR_FONTS
@@ -2846,16 +2885,16 @@ void button2(button_press_t press_type) {
 
   // do button 2 stuff
   switch (state) {
-// ** darth_update - UPDATE - start    
-// Change SPLASH to ABOUT
+  // ** darth_update - UPDATE - start    
+  // Change SPLASH to ABOUT
 
-    case ABOUT:
-      state = TOP_MENU;
-      selected_item = 0;
-      tft_update = true;
-      break;
+      case ABOUT:
+        state = TOP_MENU;
+        selected_item = 0;
+        tft_update = true;
+        break;
 
-// ** darth_update - end
+  // ** darth_update - end
 
     case TOP_MENU:
       if (press_type == LONG_PRESS) {
@@ -3119,6 +3158,9 @@ void button_handler() {
 
     last_activity = millis();
   }
+  // ** darth_update - ADD - start
+    button_handler_ex();
+  // ** darth_update - end
 }
 
 void setup() {
@@ -3204,7 +3246,13 @@ void setup() {
 
   // init serial debug messaging
   SERIAL_BEGIN(115200);
+  
+  // ** darth_update - ADD - start
+    ex_setup();
+  // ** darth_update - end
+  
   SERIAL_PRINTLN("Ready!");
+
 }
 
 void loop() {
@@ -3324,10 +3372,10 @@ void loop() {
       SERIAL_PRINTLN("Going to sleep.");
       delay(100);
 
-// ** darth_update - UPDATE - start
-// Disable Deep Sleep Start
-      //esp_deep_sleep_start();
-// ** darth_update - end      
+      // ** darth_update - UPDATE - start
+        // Disable Deep Sleep Start
+            //esp_deep_sleep_start();
+      // ** darth_update - end      
 
     } else {
       last_activity = millis();

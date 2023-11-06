@@ -45,15 +45,18 @@
 */
 
 // Define Custom colors
-#define TFT_GREY 0x39C4
+#define TFT_GREY            0x39C4
 
 // Set Clock Colors
-#define CLK_FOREGROUND TFT_ORANGE
-#define CLK_BACKGROUND TFT_BLACK
-#define CLK_COLONSEC TFT_GREY
+#define CLK_FOREGROUND      TFT_ORANGE
+#define CLK_BACKGROUND      TFT_BLACK
+#define CLK_COLONSEC        TFT_GREY
+
+#define DATE_TEXT_SIZE      DEFAULT_TEXT_SIZE
+#define ENVIRO_TEXT_SIZE    DEFAULT_TEXT_SIZE
+#define TIME_TEXT_SIZE      DEFAULT_TEXT_SIZE
 
 // Custom Button Define
-
 #define BUTTON_UP_PIN       18
 #define BUTTON_DOWN_PIN     17
 #define BUTTON_SELECT_PIN   21
@@ -101,12 +104,12 @@ const int   daylightOffset_sec = 3600;
 // Temp & Humidity Sensor Values
 Adafruit_Si7021 sensor = Adafruit_Si7021();
 
+// I2C Adafruit LIS3DH Triple-Axis Accelerometer
+Adafruit_LIS3DH lis = Adafruit_LIS3DH();
+
 // Calibration settings to adjuxt for sensor variants
 #define TEMPF_OFFSET  -1.3
 #define HUMID_OFFSET  -2
-
-// I2C Adafruit LIS3DH Triple-Axis Accelerometer
-Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
 // Declare variables to hold Temprature and Humidity
 float humidity, temp_c, temp_f;
@@ -143,6 +146,8 @@ void droid_disconnect();
 void set_random_beacon();
 void init_advertisement_data(const char* name);
 void display_captioned_menu(const char* caption, uint8_t list_index);
+void dtb_draw_string(const char* str, int32_t draw_x, int32_t draw_y, uint32_t draw_width, uint16_t text_size, uint16_t text_color, uint8_t text_datum);
+void set_ofr_alignment_by_datum(uint8_t d);
 
 // Functions
 void printLocalTime(){
@@ -197,6 +202,8 @@ void wifi_setTime_h() {
   struct tm timeinfo;
 
   int year = timeinfo.tm_year;
+  int rotation = 0;
+  char rotChar[2];
   char timeYear[5];
   char timeMonth[3];
   char timeDay[3];
@@ -204,44 +211,61 @@ void wifi_setTime_h() {
   char timeMinute[3];
   char timeSecond[3];
 
+  uint16_t y = 0, c;
+  char strLine[MSG_LEN_MAX];
+
   // Connect to Wi-Fi
-  Serial.print("Connecting to ");
-  Serial.println(ssid_h);
+  snprintf(strLine, MSG_LEN_MAX, "Connecting to %s", ssid_h);
+  tft.setTextSize(1);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 9) + 1))) / 2;
+  tft.setCursor(0, y);
+
+  dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, CLK_FOREGROUND, TC_DATUM);
   WiFi.begin(ssid_h, password_h);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 7) + 1))) / 2;
   while (WiFi.status() != WL_CONNECTED) {
+    switch (rotation) {
+      case 0:
+        snprintf(strLine, MSG_LEN_MAX,"/");
+        rotation = 1;
+        break;
+
+      case 1:
+        snprintf(strLine, MSG_LEN_MAX,"-");
+        rotation = 2;
+        break;
+      
+      case 2:
+        snprintf(strLine, MSG_LEN_MAX,"\\");
+        rotation = 0;
+        break; 
+    }
     delay(500);
-    Serial.print(".");
+    ofr.setBackgroundFillMethod(BgFillMethod::Minimum);
+    dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
   }
-  Serial.println("");
-  Serial.println("WiFi connected.");
+
+  dtb_draw_string("WiFi connected.", tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
+  ofr.setBackgroundFillMethod(BgFillMethod::None);
   
   // Init and get the time
-  Serial.print("Get Time/Date from ");
-  Serial.println(ntpServer);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 5) + 1))) / 2;
+  
+  snprintf(strLine, MSG_LEN_MAX, "Get Time/Date from %s", ntpServer);
+  
+  dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
  
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
+  //printLocalTime();
 
   getLocalTime(&timeinfo);
 
   strftime(timeYear,5, "%Y", &timeinfo);
-  // Serial.print(atoi(timeYear));
-  // Serial.print(" ");
   strftime(timeMonth,3, "%m", &timeinfo);
-  // Serial.print(atoi(timeMonth));
-  // Serial.print(" ");
   strftime(timeDay,3, "%d", &timeinfo);
-  // Serial.print(atoi(timeDay));
-  // Serial.print(" ");
   strftime(timeHour,3, "%H", &timeinfo);
-  // Serial.print(atoi(timeHour));
-  // Serial.print(" ");
   strftime(timeMinute,3, "%M", &timeinfo);
-  // Serial.print(atoi(timeMinute));
-  // Serial.print(" ");
   strftime(timeSecond,3, "%S", &timeinfo);
-  // Serial.print(atoi(timeSecond));
-  // Serial.println();
 
   rtc.adjust(DateTime(atoi(timeYear), atoi(timeMonth), atoi(timeDay), atoi(timeHour), atoi(timeMinute), atoi(timeSecond)));
 
@@ -320,97 +344,67 @@ void get_hum_temp() {
 
 void draw_date() {
   // positioning of Date Line
-  int dxpos = 8;
-  int dypos = 25; // Top of Date String
-
+  uint16_t y = 0, c;
+  char strDate[MSG_LEN_MAX];
+ 
   DateTime now = rtc.now();
 
-  //tft.setFreeFont(&AurebeshAF_Canon10pt7b);
-  dxpos += tft.drawString(spcdaysOfTheWeek[now.dayOfTheWeek()], dxpos, dypos);
-  dxpos += tft.drawChar(' ', dxpos, dypos);
-  if (now.month() < 10) dxpos += tft.drawNumber(0, dxpos, dypos);
-  dxpos += tft.drawNumber(now.month(), dxpos, dypos);
-  dxpos += tft.drawChar('/', dxpos, dypos + 16);
-  if (now.day() < 10) dxpos += tft.drawNumber(0, dxpos, dypos);
-  dxpos += tft.drawNumber(now.day(), dxpos, dypos);
-  dxpos += tft.drawChar('/', dxpos, dypos + 16);
-  dxpos += tft.drawNumber(now.year(), dxpos, dypos);
+  if ((now.month() < 10) && (now.day() > 10)) snprintf(strDate, MSG_LEN_MAX, "%s 0%d/%d/%d", spcdaysOfTheWeek[now.dayOfTheWeek()], now.month(), now.day(), now.year());
+  if ((now.month() > 10) && (now.day() < 10)) snprintf(strDate, MSG_LEN_MAX, "%s %d/0%d/%d", spcdaysOfTheWeek[now.dayOfTheWeek()], now.month(), now.day(), now.year());
+  if ((now.month() < 10) && (now.day() < 10)) snprintf(strDate, MSG_LEN_MAX, "%s 0%d/0%d/%d", spcdaysOfTheWeek[now.dayOfTheWeek()], now.month(), now.day(), now.year());
+  if ((now.month() > 10) && (now.day() > 10)) snprintf(strDate, MSG_LEN_MAX, "%s %d/%d/%d", spcdaysOfTheWeek[now.dayOfTheWeek()], now.month(), now.day(), now.year());
+
+  // location the Y position to begin drawing to center vertically the text
+  tft.setTextSize(1);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 9) + 1))) / 2;
+  tft.setCursor(0, y);
+
+  // Date
+  dtb_draw_string(strDate, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, CLK_FOREGROUND, TC_DATUM);
 }
 
 void draw_enviro() {
   // Positioning of Temp & Humid
-  int txpos = 8;
-  int typos = 120;
-  int hxpos = 8;
-  int hypos = 140;
+  uint16_t y = 0, c;
+  uint16_t y1 = 0;
+  uint16_t y2 = 0;
 
+  char strTemp[MSG_LEN_MAX];
+  char strHumd[MSG_LEN_MAX];
+
+  tft.setTextSize(1);
+  
   get_hum_temp();
 
-  //tft.setFreeFont(&AurebeshAF_Canon10pt7b);
-  txpos =+ tft.drawString("Temprature:     °F", txpos, typos);  // ° not displaying but left in for positioning of Temp Calc
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 8) + 1))) / 2;
+
+  y1 = (tft.height() - (tft.fontHeight() * 3) - 5);
+  y2 = (tft.height() - (tft.fontHeight() * 7) - 5);
   
-  // back up the txpos based on number of Digits
-  if (temp_f > 99) {
-    txpos = txpos - 62;
-  } else if (temp_f > 9) {
-    txpos = txpos - 46;
-  } else {
-    txpos = txpos - 30;
-  }
+  tft.setCursor(0, y);
 
-  txpos =+ tft.drawNumber(temp_f, txpos, typos);
+  snprintf(strTemp, MSG_LEN_MAX, "Temprature: %.0fF", temp_f);
+  snprintf(strHumd, MSG_LEN_MAX, "Humidity: %.0f%c", humidity, '%');
 
-  hxpos =+ tft.drawNumber(humidity, hxpos, hypos);
-  hxpos =+ tft.drawString("% Humidity", hxpos + 10, hypos);
+  dtb_draw_string(strTemp, tft.getViewportWidth()/2, y2, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, CLK_FOREGROUND, TC_DATUM);
+  dtb_draw_string(strHumd, tft.getViewportWidth()/2, y1, tft.getViewportWidth(), DATE_TEXT_SIZE, CLK_FOREGROUND, TC_DATUM);
 }
 
 void draw_time() {
   // Update digital time
-  int xpos = 8;
-  int ypos = 57; // Top left corner ot clock text, about half way down
-  int ysecs = ypos + 14;
-
+  uint16_t y = 0, c, x = 0;
+  char strTime[MSG_LEN_MAX];
+  
   DateTime now = rtc.now();
 
-  if (omm != now.minute()) { // Redraw hours and minutes time every minute
-    omm = now.minute();
-
-    //tft.setFreeFont(&AurebeshAF_Canon30pt7b);
-    // Draw hours and minutes
-    if (now.hour() < 10) xpos += tft.drawNumber(0, xpos, ypos); // Add hours leading zero for 24 hr clock
-    xpos += tft.drawNumber(now.hour(), xpos, ypos);             // Draw hours
-    xcolon = xpos; // Save colon coord for later to flash on/off later
-    xpos += tft.drawChar(':', xpos, ypos + 45);
-    if (now.minute() < 10) xpos += tft.drawNumber(0, xpos, ypos); // Add minutes leading zero
-    xpos += tft.drawNumber(now.minute(), xpos, ypos);             // Draw minutes
-
-    xsecs = xpos; // Save seconds 'x' position for later display updates
-  }
-
-  if (oss != now.second()) { // Redraw seconds time every second
-  oss = now.second();
-  xpos = xsecs;
-
-  if (now.second() % 2) { // Flash the colons on/off
-    //tft.setFreeFont(&AurebeshAF_Canon30pt7b);
-    tft.setTextColor(CLK_COLONSEC, CLK_BACKGROUND);         // Set colour to grey to dim colon
-    tft.drawChar(':', xcolon, ypos + 45);         // Hour:minute colon
-    //tft.setFreeFont(&AurebeshAF_Canon20pt7b);
-    xpos += tft.drawChar(':', xsecs, ysecs + 30); // Seconds colon
-    tft.setTextColor(CLK_FOREGROUND, CLK_BACKGROUND);      // Set colour back to yellow
-  }
-  else {
-    //tft.setFreeFont(&AurebeshAF_Canon30pt7b);
-    tft.drawChar(':', xcolon, ypos + 45);         // Hour:minute colon
-    //tft.setFreeFont(&AurebeshAF_Canon20pt7b);
-    xpos += tft.drawChar(':', xsecs, ysecs + 30); // Seconds colon
-  }
-
-  //tft.setFreeFont(&AurebeshAF_Canon20pt7b);
-  //Draw seconds
-  if (now.second() < 10) xpos += tft.drawNumber(0, xpos, ysecs); // Add leading zero
-  tft.drawNumber(now.second(), xpos, ysecs);                     // Draw seconds
-  }
+  tft.setTextSize(1);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 5) + 1))) / 2;
+  tft.setCursor(0, y);
+  
+  snprintf(strTime, MSG_LEN_MAX, "%02.0f:%02.0f:%02.0f", (float)now.hour(), (float)now.minute(), (float)now.second());
+  
+  // Date
+  dtb_draw_string(strTime, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 5, CLK_FOREGROUND, TC_DATUM);
 }
 
 void clock_envio_disp() {
@@ -419,19 +413,18 @@ void clock_envio_disp() {
   if (pss != now.second()) 
   {
     pss = now.second();
-
     if (ohh != now.hour()) 
     {
       ohh = now.hour();
       draw_date();
     }
-
     if (omm != now.minute())
     {
       draw_enviro();
     }
-
+    ofr.setBackgroundFillMethod(BgFillMethod::Minimum);
     draw_time();
+    ofr.setBackgroundFillMethod(BgFillMethod::None);
   }
 }
 
@@ -1349,13 +1342,16 @@ void buttonsel(button_press_t press_type) {
       break;
 
     case SET_TIME:
+      // Add two new states to handle the set time functions.
       if (selected_item == 0) {
-        wifi_setTime_m()
+      //  wifi_setTime_m();
       } else {
-        wifi_setTime_h()
+      //  wifi_setTime_h();
       }
+      break;
       
     case CLOCK_ENVIRO:
+      break;
 
     case BEACON_TYPE_MENU:
       state = beacon_type_menu[selected_item].state;
@@ -1584,7 +1580,7 @@ void buttonbk(button_press_t press_type) {
   switch (state) {
     case ABOUT:
       state = TOP_MENU;
-      selected_item = 0;
+      selected_item = 4;
       tft_update = true;
       break;
 
@@ -1596,13 +1592,15 @@ void buttonbk(button_press_t press_type) {
 
     case SET_TIME:
       state = TOP_MENU;
-      selected_item = 0;
+      selected_item = 3;
       tft_update = true;
       break;
 
     case CLOCK_ENVIRO:
       state = TOP_MENU;
-      selected_item = 0;
+      selected_item = 2;
+      ohh = 99;
+      omm = 99;
       tft_update = true;
       break;
 
@@ -1795,9 +1793,12 @@ void update_display_ex() {
       case SET_TIME:
         display_captioned_menu(msg_select, LIST_SET_TIME);
         break;
+
+      case CLOCK_ENVIRO:
+        clock_envio_disp();
+        break;
     }
 }
-
 
 void setup_sensors(void){
   //Setup SDA, SCL for RTC
@@ -1877,5 +1878,13 @@ void ex_setup() {
   pinMode(BUTTON_SELECT_PIN, INPUT_PULLUP);
   pinMode(BUTTON_BACK_PIN, INPUT_PULLUP);
 
+  Serial.begin(115200);
+  
   setup_sensors();
+}
+
+void loop_ex() {
+  
+  if (state == CLOCK_ENVIRO) clock_envio_disp();
+  updateBL();
 }

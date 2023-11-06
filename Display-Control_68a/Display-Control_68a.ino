@@ -171,7 +171,7 @@
  */
 
 #define USE_OFR_FONTS           // uncomment to use openFontRenderer (see notes above on how to install this library)
-//#define SERIAL_DEBUG_ENABLE     // uncomment to enable serial debug/monitor messages
+// #define SERIAL_DEBUG_ENABLE     // uncomment to enable serial debug/monitor messages
 
 #include <TFT_eSPI.h>
 #include <SPI.h>
@@ -188,7 +188,7 @@
     #include "OpenFontRender.h"
     #include "Aurebesh-English.h"
     #include "DroidobeshDepot-RegularModified.h"
-    #include "Aurabesh.h"
+    #include "AurebeshAF-Canon.h"
     //#include "Aurebeshred-Bold.h"
     //#include "TFGunray-Bold.h"
   #endif
@@ -528,7 +528,7 @@ const char* msg_beacon_location_param[NUM_BEACON_PARAMS] = {
     dtb_font_t dtb_fonts[] = {
       { AurebeshEnglish,                sizeof(AurebeshEnglish),                 0.9, -0.08 },      // Font Index 1
       { DroidobeshDepotRegularModified, sizeof(DroidobeshDepotRegularModified),  0.9, -0.06 },      // Font Index 2
-      { Aurabesh,                       sizeof(Aurabesh),                        1.0, -0.06 },      // Font Index 3
+      { AurebeshAFCanon,                sizeof(AurebeshAFCanon),                 0.9, -0.32 },      // Font Index 3
       //{ AurebeshRedBold,                sizeof(AurebeshRedBold),                 1.0, -0.14 },    // Font Index 4
       //{ TFGunrayBold,                   sizeof(TFGunrayBold),                    1.0,  0    },    // Font Index 5
     };
@@ -544,7 +544,7 @@ const char* msg_beacon_location_param[NUM_BEACON_PARAMS] = {
     // This block will setup varialbes for using one of the OFR fonts at startup
 
     // Set Default Font by changing this Value to the desired font index listed above
-    uint8_t dtb_font = 1;
+    uint8_t dtb_font = 3;
     
     // set OFR font on boot if set to 1
     uint8_t ofr_boot= 1;
@@ -1204,12 +1204,13 @@ void dtb_draw_string(const char* str, int32_t draw_x, int32_t draw_y, uint32_t d
     // set text alignment
     set_ofr_alignment_by_datum(text_datum);
 
+    //ofr.setBackgroundFillMethod(BgFillMethod::Block);
+
     if (text_size != 0) {
 
       // if text_size is less than 8 it's a GLCD font size
       // calculate and set the actual font size based on tft.fontHeight()
       if (text_size < 8) {
-
         if (dtb_fonts[dtb_font - 1].y_scale != 1) {
           ofr.setFontSize(ofr.calculateFitFontSize(draw_width, (uint32_t)(tft.fontHeight() * dtb_fonts[dtb_font - 1].y_scale), ofr.getLayout(), str));
         } else {
@@ -2534,7 +2535,7 @@ void update_display() {
 
   // ** darth_update - add - start
   // add the update_display_ex call
-
+ 
   update_display_ex();
   // ** darth_update - end
 
@@ -3360,25 +3361,37 @@ void loop() {
       }
       break;
   }
-
+ 
   update_display();
 
-  // inactivity sleep check; screen will blank when ESP32 goes to sleep
-  // press reset button to wakeup
-  if (millis() - last_activity > SLEEP_AFTER) {
+  // ** darth_update - ADD - start
+  // add loop_ex() to main loop
 
-    // do not go to sleep if the beacon is active
-    if (state != BEACON_ACTIVE && state != BEACON_EXPERT_ACTIVE) {
-      SERIAL_PRINTLN("Going to sleep.");
-      delay(100);
+  loop_ex();
+  
+  // ** darth_update -end
 
-      // ** darth_update - UPDATE - start
-        // Disable Deep Sleep Start
-            //esp_deep_sleep_start();
-      // ** darth_update - end      
+  // ** darth_update - REMOVE - start
+    // remove cod for sleeping ESP32
 
-    } else {
-      last_activity = millis();
-    }
-  }
+    // inactivity sleep check; screen will blank when ESP32 goes to sleep
+    // press reset button to wakeup
+    // if (millis() - last_activity > SLEEP_AFTER) {
+
+    //   // do not go to sleep if the beacon is active
+    //   if (state != BEACON_ACTIVE && state != BEACON_EXPERT_ACTIVE) {
+    //     SERIAL_PRINTLN("Going to sleep.");
+    //     delay(100);
+
+    //     // ** darth_update - UPDATE - start
+    //       // Disable Deep Sleep Start
+    //           //esp_deep_sleep_start();
+    //     // ** darth_update - end      
+
+    //   } else {
+    //     last_activity = millis();
+    //   }
+    // }
+
+  // ** darth_update - end
 }

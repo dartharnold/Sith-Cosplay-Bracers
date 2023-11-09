@@ -684,6 +684,7 @@ typedef enum {
 // ** darth_update - UPDATE - start
   // change Splash Screen to About Screen
   // define CLOCK Values
+  // added items for home and mobile set functions
 
   typedef enum {
     ABOUT,                  // about screen
@@ -719,7 +720,7 @@ typedef enum {
 
     CLOCK_ENVIRO,
     SET_TIME,
-
+   
     MOBILE_WIFI,
     HOME_WIFI,
   } system_state_t;
@@ -832,11 +833,11 @@ TFT_eSPI tft = TFT_eSPI();      // display interface
 bool tft_update = true;         // flag to indicate display needs to be updated
 
 // ** darth_update - UPDATE - start
-  // change startup to TOP_MENU for now but later make this the clock screen
+  // change startup to CLOCK_ENVIRO for now but later make this the clock screen
 
   // replace SPLASH with desired start screen
 
-    system_state_t state = TOP_MENU;  // track the current state of the toolbox
+    system_state_t state = CLOCK_ENVIRO;  // track the current state of the toolbox
 
 // ** darth_update - end
 

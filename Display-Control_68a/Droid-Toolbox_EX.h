@@ -148,6 +148,7 @@ void init_advertisement_data(const char* name);
 void display_captioned_menu(const char* caption, uint8_t list_index);
 void dtb_draw_string(const char* str, int32_t draw_x, int32_t draw_y, uint32_t draw_width, uint16_t text_size, uint16_t text_color, uint8_t text_datum);
 void set_ofr_alignment_by_datum(uint8_t d);
+void update_display();
 
 // Functions
 void printLocalTime(){
@@ -203,6 +204,7 @@ void wifi_setTime_h() {
 
   int year = timeinfo.tm_year;
   int rotation = 0;
+  int tempFontSize;
   char rotChar[2];
   char timeYear[5];
   char timeMonth[3];
@@ -211,18 +213,31 @@ void wifi_setTime_h() {
   char timeMinute[3];
   char timeSecond[3];
 
+  uint8_t tmp_font;
+
   uint16_t y = 0, c;
   char strLine[MSG_LEN_MAX];
 
+  tempFontSize = ofr.getFontSize();
+  tmp_font = dtb_font;
+
+  dtb_font = 1;
+  
+  ofr.loadFont(dtb_fonts[dtb_font - 1].data, dtb_fonts[dtb_font - 1].size);
+  ofr.setFontSize(16);
   // Connect to Wi-Fi
   snprintf(strLine, MSG_LEN_MAX, "Connecting to %s", ssid_h);
   tft.setTextSize(1);
   y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 9) + 1))) / 2;
   tft.setCursor(0, y);
 
-  dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, CLK_FOREGROUND, TC_DATUM);
-  WiFi.begin(ssid_h, password_h);
+  Serial.println(strLine);
+  ofr.drawString("Connecting to", tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
   y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 7) + 1))) / 2;
+  ofr.drawString(ssid_h, tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout()); 
+  //dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, CLK_FOREGROUND, TC_DATUM);
+  WiFi.begin(ssid_h, password_h);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 5) + 1))) / 2;
   while (WiFi.status() != WL_CONNECTED) {
     switch (rotation) {
       case 0:
@@ -242,18 +257,28 @@ void wifi_setTime_h() {
     }
     delay(500);
     ofr.setBackgroundFillMethod(BgFillMethod::Minimum);
-    dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
+    Serial.println(strLine);
+    //dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
+    ofr.drawString(strLine, tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
   }
 
-  dtb_draw_string("WiFi connected.", tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
+  ofr.drawString("  ",  tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+  Serial.println("WiFi connected.");
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 3) + 1))) / 2;
+  ofr.drawString("WiFi connected.", tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+  //dtb_draw_string("WiFi connected.", tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
   ofr.setBackgroundFillMethod(BgFillMethod::None);
   
   // Init and get the time
-  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 5) + 1))) / 2;
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE) + 1))) / 2;
   
   snprintf(strLine, MSG_LEN_MAX, "Get Time/Date from %s", ntpServer);
   
-  dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
+  Serial.println(strLine);
+  ofr.drawString("Get Time/Date from", tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * -1) + 1))) / 2;
+  ofr.drawString(ntpServer, tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+    //dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
  
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   //printLocalTime();
@@ -269,6 +294,11 @@ void wifi_setTime_h() {
 
   rtc.adjust(DateTime(atoi(timeYear), atoi(timeMonth), atoi(timeDay), atoi(timeHour), atoi(timeMinute), atoi(timeSecond)));
 
+  dtb_font = tmp_font;
+  ofr.setFontSize(tempFontSize);
+
+  ofr.loadFont(dtb_fonts[dtb_font - 1].data, dtb_fonts[dtb_font - 1].size);
+
   //disconnect WiFi as it's no longer needed
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
@@ -278,6 +308,9 @@ void wifi_setTime_m() {
   struct tm timeinfo;
 
   int year = timeinfo.tm_year;
+  int rotation = 0;
+  int tempFontSize;
+  char rotChar[2];
   char timeYear[5];
   char timeMonth[3];
   char timeDay[3];
@@ -285,51 +318,152 @@ void wifi_setTime_m() {
   char timeMinute[3];
   char timeSecond[3];
 
+  uint8_t tmp_font;
+
+  uint16_t y = 0, c;
+  char strLine[MSG_LEN_MAX];
+
+  tempFontSize = ofr.getFontSize();
+  tmp_font = dtb_font;
+
+  dtb_font = 1;
+  
+  ofr.loadFont(dtb_fonts[dtb_font - 1].data, dtb_fonts[dtb_font - 1].size);
+  ofr.setFontSize(16);
   // Connect to Wi-Fi
-  Serial.print("Connecting to ");
-  Serial.println(ssid_m);
+  snprintf(strLine, MSG_LEN_MAX, "Connecting to %s", ssid_m);
+  tft.setTextSize(1);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 9) + 1))) / 2;
+  tft.setCursor(0, y);
+
+  Serial.println(strLine);
+  ofr.drawString("Connecting to", tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 7) + 1))) / 2;
+  ofr.drawString(ssid_m, tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout()); 
+  //dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, CLK_FOREGROUND, TC_DATUM);
   WiFi.begin(ssid_m, password_m);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 5) + 1))) / 2;
   while (WiFi.status() != WL_CONNECTED) {
+    switch (rotation) {
+      case 0:
+        snprintf(strLine, MSG_LEN_MAX,"/");
+        rotation = 1;
+        break;
+
+      case 1:
+        snprintf(strLine, MSG_LEN_MAX,"-");
+        rotation = 2;
+        break;
+      
+      case 2:
+        snprintf(strLine, MSG_LEN_MAX,"*");
+        rotation = 0;
+        break; 
+    }
     delay(500);
-    Serial.print(".");
+    Serial.println(strLine);
+    //dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
+    ofr.drawString("     ",  tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+    ofr.drawString(strLine, tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
   }
-  Serial.println("");
+
+  ofr.drawString("     ",  tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
   Serial.println("WiFi connected.");
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * 3) + 1))) / 2;
+  ofr.drawString("WiFi connected.", tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+  //dtb_draw_string("WiFi connected.", tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
   
   // Init and get the time
-  Serial.print("Get Time/Date from ");
-  Serial.println(ntpServer);
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE) + 1))) / 2;
+  
+  snprintf(strLine, MSG_LEN_MAX, "Get Time/Date from %s", ntpServer);
+  
+  Serial.println(strLine);
+  ofr.drawString("Get Time/Date from", tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+  y = (tft.height() - (tft.fontHeight() * ((DATE_TEXT_SIZE * -1) + 1))) / 2;
+  ofr.drawString(ntpServer, tft.getViewportWidth()/2, y, TFT_GREEN, ofr.getBackgroundColor(), ofr.getLayout());
+    //dtb_draw_string(strLine, tft.getViewportWidth()/2, y, tft.getViewportWidth(), DATE_TEXT_SIZE + 1, TFT_YELLOW, TC_DATUM);
  
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
+  //printLocalTime();
 
   getLocalTime(&timeinfo);
 
   strftime(timeYear,5, "%Y", &timeinfo);
-  // Serial.print(atoi(timeYear));
-  // Serial.print(" ");
   strftime(timeMonth,3, "%m", &timeinfo);
-  // Serial.print(atoi(timeMonth));
-  // Serial.print(" ");
   strftime(timeDay,3, "%d", &timeinfo);
-  // Serial.print(atoi(timeDay));
-  // Serial.print(" ");
   strftime(timeHour,3, "%H", &timeinfo);
-  // Serial.print(atoi(timeHour));
-  // Serial.print(" ");
   strftime(timeMinute,3, "%M", &timeinfo);
-  // Serial.print(atoi(timeMinute));
-  // Serial.print(" ");
   strftime(timeSecond,3, "%S", &timeinfo);
-  // Serial.print(atoi(timeSecond));
-  // Serial.println();
 
   rtc.adjust(DateTime(atoi(timeYear), atoi(timeMonth), atoi(timeDay), atoi(timeHour), atoi(timeMinute), atoi(timeSecond)));
+
+  dtb_font = tmp_font;
+  ofr.setFontSize(tempFontSize);
+
+  ofr.loadFont(dtb_fonts[dtb_font - 1].data, dtb_fonts[dtb_font - 1].size);
 
   //disconnect WiFi as it's no longer needed
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 }
+
+// void wifi_setTime_m() {
+//   struct tm timeinfo;
+
+//   int year = timeinfo.tm_year;
+//   char timeYear[5];
+//   char timeMonth[3];
+//   char timeDay[3];
+//   char timeHour[3];
+//   char timeMinute[3];
+//   char timeSecond[3];
+
+//   // Connect to Wi-Fi
+//   Serial.print("Connecting to ");
+//   Serial.println(ssid_m);
+//   WiFi.begin(ssid_m, password_m);
+//   while (WiFi.status() != WL_CONNECTED) {
+//     delay(500);
+//     Serial.print(".");
+//   }
+//   Serial.println("");
+//   Serial.println("WiFi connected.");
+  
+//   // Init and get the time
+//   Serial.print("Get Time/Date from ");
+//   Serial.println(ntpServer);
+ 
+//   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+//   printLocalTime();
+
+//   getLocalTime(&timeinfo);
+
+//   strftime(timeYear,5, "%Y", &timeinfo);
+//   // Serial.print(atoi(timeYear));
+//   // Serial.print(" ");
+//   strftime(timeMonth,3, "%m", &timeinfo);
+//   // Serial.print(atoi(timeMonth));
+//   // Serial.print(" ");
+//   strftime(timeDay,3, "%d", &timeinfo);
+//   // Serial.print(atoi(timeDay));
+//   // Serial.print(" ");
+//   strftime(timeHour,3, "%H", &timeinfo);
+//   // Serial.print(atoi(timeHour));
+//   // Serial.print(" ");
+//   strftime(timeMinute,3, "%M", &timeinfo);
+//   // Serial.print(atoi(timeMinute));
+//   // Serial.print(" ");
+//   strftime(timeSecond,3, "%S", &timeinfo);
+//   // Serial.print(atoi(timeSecond));
+//   // Serial.println();
+
+//   rtc.adjust(DateTime(atoi(timeYear), atoi(timeMonth), atoi(timeDay), atoi(timeHour), atoi(timeMinute), atoi(timeSecond)));
+
+//   //disconnect WiFi as it's no longer needed
+//   WiFi.disconnect(true);
+//   WiFi.mode(WIFI_OFF);
+// }
 
 void get_hum_temp() {
     // Read the humidity from the sensor.
@@ -1342,11 +1476,12 @@ void buttonsel(button_press_t press_type) {
       break;
 
     case SET_TIME:
-      // Add two new states to handle the set time functions.
       if (selected_item == 0) {
-      //  wifi_setTime_m();
+        state = MOBILE_WIFI;
+        tft_update = true;
       } else {
-      //  wifi_setTime_h();
+        state = HOME_WIFI;
+        tft_update = true;
       }
       break;
       
@@ -1592,13 +1727,13 @@ void buttonbk(button_press_t press_type) {
 
     case SET_TIME:
       state = TOP_MENU;
-      selected_item = 3;
+      selected_item = 0;
       tft_update = true;
       break;
-
+    
     case CLOCK_ENVIRO:
       state = TOP_MENU;
-      selected_item = 2;
+      selected_item = 0;
       ohh = 99;
       omm = 99;
       tft_update = true;
@@ -1796,6 +1931,22 @@ void update_display_ex() {
 
       case CLOCK_ENVIRO:
         clock_envio_disp();
+        break;
+      case HOME_WIFI:
+        wifi_setTime_h();
+        state = TOP_MENU;
+        selected_item = 0;
+        tft_update = true;
+        delay(5000);
+        update_display();
+        break;
+      case MOBILE_WIFI:
+        wifi_setTime_m();
+        state = TOP_MENU;
+        selected_item = 0;
+        tft_update = true;
+        delay(5000);
+        update_display();
         break;
     }
 }

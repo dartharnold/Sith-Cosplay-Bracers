@@ -4,7 +4,7 @@
 // NeoPixel declarations
 // Which pin on the Arduino is connected to the NeoPixels?
 #define NEOPIN 7
-#define PIXELCOUNT 2  // How many NeoPixels are attached to the Arduino?
+#define PIXELCOUNT 14  // How many NeoPixels are attached to the Arduino?
 #define NEOBRIGHT 75
 #define PIXELFORMAT NEO_GRB + NEO_KHZ800  // NeoPixel color format & data rate. See the strandtest example for information on possible values.
 

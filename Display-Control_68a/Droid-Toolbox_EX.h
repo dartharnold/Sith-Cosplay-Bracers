@@ -545,7 +545,8 @@ void clock_envio_disp() {
   DateTime now = rtc.now();
 
   if (pss != now.second()) 
-  {
+  {    
+    ofr.setBackgroundFillMethod(BgFillMethod::Minimum);
     pss = now.second();
     if (ohh != now.hour()) 
     {
@@ -556,7 +557,7 @@ void clock_envio_disp() {
     {
       draw_enviro();
     }
-    ofr.setBackgroundFillMethod(BgFillMethod::Minimum);
+    
     draw_time();
     ofr.setBackgroundFillMethod(BgFillMethod::None);
   }
@@ -1196,6 +1197,11 @@ void buttonup(button_press_t press_type) {
       tft_update = true;
       break;
 
+    case MOBILE_WIFI:
+      break;
+
+    case HOME_WIFI:
+      break;
 
     case BEACON_TYPE_MENU:
       selected_item--;
@@ -1339,6 +1345,12 @@ void buttondwn(button_press_t press_type) {
         selected_item = 0;
       }
       tft_update = true;
+      break;
+    
+    case MOBILE_WIFI:
+      break;
+
+    case HOME_WIFI:
       break;
 
     case BEACON_TYPE_MENU:
@@ -1485,6 +1497,12 @@ void buttonsel(button_press_t press_type) {
       }
       break;
       
+    case MOBILE_WIFI:
+      break;
+
+    case HOME_WIFI:
+      break;
+
     case CLOCK_ENVIRO:
       break;
 
